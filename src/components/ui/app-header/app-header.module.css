@@ -1,6 +1,7 @@
 .header {
   background-color: var(--background);
 }
+
 .menu {
   display: flex;
   align-items: center;
@@ -12,12 +13,19 @@
 .menu_part_left {
   display: flex;
   flex-basis: 35%;
+  gap: 8px;
+  padding: 0 10px;
+  align-items: center;
 }
 
 .link {
   display: flex;
   text-decoration: none;
   color: var(--text-inactive-color);
+  font-family: 'Jet Brains Mono';
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: normal;
 }
 
 .link_active {
@@ -27,6 +35,7 @@
 .link_position_last {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   flex-basis: 35%;
 }
 
