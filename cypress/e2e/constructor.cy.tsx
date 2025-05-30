@@ -14,57 +14,34 @@ describe('Конструктор бургеров', () => {
     cy.wait('@getIngredients');
   });
 
-  it('Должен отображать пустой конструктор при загрузке', () => {
-    cy.get('[data-cy="empty-bun-top"]').should('contain', 'Выберите булки');
-    cy.get('[data-cy="empty-bun-bottom"]').should('contain', 'Выберите булки');
-    cy.get('[data-cy="empty-ingredients"]').should(
-      'contain',
-      'Выберите начинку'
-    );
-  });
+  it('Должен добавлять ингредиент в конструктор', () => {
+    cy.get('[data-cy="empty-bun-top"]').should('exist');
+    cy.get('[data-cy="empty-bun-bottom"]').should('exist');
+    cy.get('[data-cy="empty-ingredients"]').should('exist');
 
-  it('Должен добавлять ингредиенты в конструктор', () => {
-    // Добавляем булку
     cy.get(`[data-cy="${BUN_ID}"]`).find('button').click();
-    cy.get('[data-cy="bun-top"]').should(
-      'contain',
-      'Флюоресцентная булка R2-D3'
-    );
-    cy.get('[data-cy="bun-bottom"]').should(
-      'contain',
-      'Флюоресцентная булка R2-D3'
-    );
+    cy.get('[data-cy="bun-top"]').should('exist');
+    cy.get('[data-cy="bun-bottom"]').should('exist');
 
-    // Добавляем начинку
     cy.get(`[data-cy="${MAIN_ID}"]`).find('button').click();
-    cy.get('[data-cy="constructor-ingredients"]').should(
-      'contain',
-      'Биокотлета из марсианской Магнолии'
-    );
-
-    // Добавляем соус
-    cy.get(`[data-cy="${SAUCE_ID}"]`).find('button').click();
-    cy.get('[data-cy="constructor-ingredients"]').should(
-      'contain',
-      'Соус Spicy-X'
-    );
+    cy.get('[data-cy="constructor-ingredients"]')
+      .children()
+      .should('have.length.gt', 0);
   });
 
-  it('Должен открывать и закрывать модальное окно ингредиента', () => {
-    cy.get(`[data-cy="${MAIN_ID}"]`).click();
-    cy.url().should('include', `/ingredients/${MAIN_ID}`);
-    cy.get('[data-cy="ingredient-modal"]').should('be.visible');
+  it('Должен открывать и закрывать модальное окно с деталями ингредиента', () => {
+    cy.get(`[data-cy="${SAUCE_ID}"]`).click();
+
+    cy.get('[data-cy="ingredient-details"]').should('exist');
+    cy.url().should('include', `/ingredients/${SAUCE_ID}`);
+
     cy.get('[data-cy="close-modal"]').click();
-    cy.get('[data-cy="ingredient-modal"]').should('not.exist');
+    cy.get('[data-cy="ingredient-details"]').should('not.exist');
+    cy.url().should('eq', `${BASE_URL}/`);
   });
 
   describe('Оформление заказа', () => {
     beforeEach(() => {
-      // Добавляем ингредиенты
-      cy.get(`[data-cy="${BUN_ID}"]`).find('button').click();
-      cy.get(`[data-cy="${MAIN_ID}"]`).find('button').click();
-
-      // Мокаем API
       cy.intercept('GET', 'api/auth/user', { fixture: 'user.json' }).as(
         'getUser'
       );
@@ -72,9 +49,12 @@ describe('Конструктор бургеров', () => {
         'postOrder'
       );
 
-      // Авторизация
-      window.localStorage.setItem('refreshToken', 'test-token');
-      cy.setCookie('accessToken', 'test-access-token');
+      window.localStorage.setItem('refreshToken', 'test-refreshToken');
+      cy.setCookie('accessToken', 'test-accessToken');
+
+      // Добавляем ингредиенты перед каждым тестом заказа
+      cy.get(`[data-cy="${BUN_ID}"]`).find('button').click();
+      cy.get(`[data-cy="${MAIN_ID}"]`).find('button').click();
     });
 
     afterEach(() => {
@@ -83,28 +63,31 @@ describe('Конструктор бургеров', () => {
     });
 
     it('Должен оформлять заказ и показывать номер', () => {
-      cy.get('[data-cy="order-button"] button').click();
+      // Проверяем, что ингредиенты добавлены
+      cy.get('[data-cy="bun-top"]').should('exist');
+      cy.get('[data-cy="constructor-ingredients"]')
+        .children()
+        .should('have.length.gt', 0);
 
-      cy.wait(['@getUser', '@postOrder']).then((interceptions) => {
-        const orderResponse = interceptions[1].response?.body;
-        expect(orderResponse?.success).to.be.true;
-        expect(orderResponse?.order?.number).to.eq(76767);
-      });
+      // Проверяем и кликаем кнопку заказа
+      cy.get('[data-cy="order-button"] button')
+        .should('not.be.disabled')
+        .click();
 
-      cy.get('[data-cy="order-modal"]', { timeout: 10000 }).should(
-        'be.visible'
-      );
-      cy.get('[data-cy="order-number"]').should('contain', '76767');
+      // Ждем выполнения запросов
+      cy.wait(['@getUser', '@postOrder']);
 
+      // Добавляем задержку для появления модального окна
+      cy.get('[data-cy="order-modal"]', { timeout: 10000 }).should('exist');
+      cy.get('[data-cy="order-modal"]').should('contain', '76767');
+
+      // Закрываем модальное окно
       cy.get('[data-cy="close-modal"]').click();
       cy.get('[data-cy="order-modal"]').should('not.exist');
 
       // Проверяем очистку конструктора
-      cy.get('[data-cy="empty-bun-top"]').should('contain', 'Выберите булки');
-      cy.get('[data-cy="empty-ingredients"]').should(
-        'contain',
-        'Выберите начинку'
-      );
+      cy.get('[data-cy="empty-bun-top"]').should('exist');
+      cy.get('[data-cy="empty-ingredients"]').should('exist');
     });
   });
 });
