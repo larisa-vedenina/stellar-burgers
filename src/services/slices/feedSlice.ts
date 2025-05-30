@@ -4,7 +4,7 @@ import {
   createSelector
 } from '@reduxjs/toolkit';
 import { getFeedsApi } from '../../utils/burger-api';
-import { TOrder, TOrdersData } from '@utils-types';
+import { TOrder } from '@utils-types';
 
 export const fetchFeeds = createAsyncThunk(
   'feed/fetchAll',
@@ -30,7 +30,7 @@ type TFeedState = {
 };
 
 // Начальное состояние фида
-const initialState: TFeedState = {
+export const initialState: TFeedState = {
   orders: [],
   total: 0,
   totalToday: 0,
