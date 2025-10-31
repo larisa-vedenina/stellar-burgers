@@ -10,18 +10,6 @@
 - **PWA** с офлайн-режимом
 
 
-## Архитектура
-
-src/
-├── components/ # UI-компоненты
-├── pages/ # Страницы приложения
-├── services/ # API и WebSocket
-├── store/ # Redux store (slices)
-├── hooks/ # Кастомные хуки
-├── utils/ # Вспомогательные функции
-└── types/ # Типы
-
-
 ## Запуск проекта
 
 ```bash
